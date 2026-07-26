@@ -1,0 +1,7 @@
+{
+  "welcomeChannelId": "",
+  "embedColor": "#5865F2",
+  "xpPerMessageMin": 15,
+  "xpPerMessageMax": 25,
+  "xpCooldownSeconds": 60
+}
