@@ -1,8 +1,18 @@
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const database = require('./database');
 require('dotenv').config();
+
+// Dummy HTTP health check server for Render Web Service (Free Tier)
+const PORT = process.env.PORT || 3000;
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('🤖 Bot GatoPreto está online e ativo!');
+}).listen(PORT, () => {
+  console.log(`🌐 Servidor HTTP de verificação ativo na porta ${PORT}`);
+});
 
 // Initialize the local JSON database
 database.init();
@@ -34,7 +44,7 @@ for (const folder of commandFolders) {
     if ('data' in command && 'execute' in command) {
       client.commands.set(command.data.name, command);
     } else {
-      console.warn(`[AVISO] O comando em ${filePath} está em falta com as propriedades obrigatórias "data" ou "execute".`);
+      console.warn(`[AVISO] O comando em ${filePath} está em falta com as propriedades obrigatórias "data" or "execute".`);
     }
   }
 }
