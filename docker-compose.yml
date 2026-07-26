@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  gatopreto-bot:
+    build: .
+    container_name: gatopreto-bot
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./database.json:/app/database.json
+      - ./config.json:/app/config.json
