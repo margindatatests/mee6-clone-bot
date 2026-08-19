@@ -31,6 +31,15 @@ function init() {
 
     CREATE INDEX IF NOT EXISTS idx_users_leaderboard ON users (guild_id, level DESC, xp DESC);
 
+    -- Tabela de configurações por servidor (Feature Flags)
+    CREATE TABLE IF NOT EXISTS guild_settings (
+      guild_id TEXT PRIMARY KEY,
+      spicy_mode INTEGER NOT NULL DEFAULT 0, -- 0 = desativado, 1 = ativado (modo atrevido/fofo)
+      ai_enabled INTEGER NOT NULL DEFAULT 1,
+      admin_role_id TEXT DEFAULT NULL,
+      updated_at INTEGER NOT NULL
+    );
+
     -- Tabela de histórico persistente de conversas com a Paimon
     CREATE TABLE IF NOT EXISTS chat_messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,6 +76,19 @@ function init() {
       WHERE guild_id = ? AND (level > ? OR (level = ? AND xp > ?))
     `),
     
+    // Guild Settings & Feature Flags
+    getGuildSettings: db.prepare('SELECT * FROM guild_settings WHERE guild_id = ?'),
+    setSpicyMode: db.prepare(`
+      INSERT INTO guild_settings (guild_id, spicy_mode, updated_at) 
+      VALUES (?, ?, ?)
+      ON CONFLICT(guild_id) DO UPDATE SET spicy_mode = excluded.spicy_mode, updated_at = excluded.updated_at
+    `),
+    setAdminRole: db.prepare(`
+      INSERT INTO guild_settings (guild_id, admin_role_id, updated_at)
+      VALUES (?, ?, ?)
+      ON CONFLICT(guild_id) DO UPDATE SET admin_role_id = excluded.admin_role_id, updated_at = excluded.updated_at
+    `),
+
     // Histórico de Conversa Persistente
     saveChatMessage: db.prepare(`
       INSERT INTO chat_messages (guild_id, user_id, role, content, created_at)
@@ -91,7 +113,7 @@ function init() {
     saveUserMemory: db.prepare('INSERT INTO user_memories (user_id, memory, created_at) VALUES (?, ?, ?)')
   };
 
-  console.log('🗄️ Base de dados SQLite (Paimon.db) inicializada com suporte a Memória Persistente!');
+  console.log('🗄️ Base de dados SQLite (Paimon.db) inicializada com suporte a RBAC & Feature Flags!');
 }
 
 // Obter usuário da base de dados (cria se não existir)
@@ -108,6 +130,32 @@ function getUser(guildId, userId) {
     };
   }
   return user;
+}
+
+// Obter configurações do servidor
+function getGuildSettings(guildId) {
+  let settings = stmts.getGuildSettings.get(guildId);
+  if (!settings) {
+    settings = {
+      guild_id: guildId,
+      spicy_mode: 0,
+      ai_enabled: 1,
+      admin_role_id: null
+    };
+  }
+  return settings;
+}
+
+// Atualizar modo atrevido/spicy mode
+function setSpicyMode(guildId, enabled) {
+  const now = Date.now();
+  stmts.setSpicyMode.run(guildId, enabled ? 1 : 0, now);
+}
+
+// Atualizar cargo admin do servidor
+function setAdminRole(guildId, roleId) {
+  const now = Date.now();
+  stmts.setAdminRole.run(guildId, roleId, now);
 }
 
 // Fórmula para EXP necessária para o próximo Rank de Aventura (AR)
@@ -172,10 +220,10 @@ function saveChatMessage(guildId, userId, role, content) {
   } catch (e) {}
 }
 
-// Obter histórico recente ordenado cronologicamente (do mais antigo para o mais recente)
+// Obter histórico recente ordenado cronologicamente
 function getRecentChatHistory(userId, limit = 6) {
   const rows = stmts.getRecentChatHistory.all(userId, limit);
-  return rows.reverse(); // Inverter para enviar na ordem correta da conversa
+  return rows.reverse();
 }
 
 // Obter memórias de longo prazo do usuário
@@ -193,5 +241,8 @@ module.exports = {
   getXpNeededForNextLevel,
   saveChatMessage,
   getRecentChatHistory,
-  getUserMemories
+  getUserMemories,
+  getGuildSettings,
+  setSpicyMode,
+  setAdminRole
 };

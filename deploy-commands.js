@@ -1,4 +1,4 @@
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');
+const { REST, Routes, SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 require('dotenv').config();
 
 const commands = [
@@ -25,6 +25,34 @@ const commands = [
   new SlashCommandBuilder()
     .setName('paimon')
     .setDescription('Peça um conselho ou ouça uma frase sábia da Paimon!'),
+
+  // Comando de Administração & Feature Flags (RBAC)
+  new SlashCommandBuilder()
+    .setName('paimon-config')
+    .setDescription('Painel de configuração e feature flags da Paimon (Apenas Administradores).')
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('spicy-mode')
+        .setDescription('Ativa ou desativa o modo sem censura (xingamentos fofos e deboche).')
+        .addBooleanOption(option =>
+          option
+            .setName('ativar')
+            .setDescription('True para ativar o modo atrevido, False para desativar')
+            .setRequired(true)))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('set-admin-role')
+        .setDescription('Define um cargo com permissão para gerenciar a Paimon.')
+        .addRoleOption(option =>
+          option
+            .setName('cargo')
+            .setDescription('O cargo que terá acesso de administração')
+            .setRequired(true)))
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('status')
+        .setDescription('Exibe o status atual das configurações e feature flags.')),
 ].map(command => command.toJSON());
 
 if (!process.env.DISCORD_TOKEN || !process.env.CLIENT_ID) {
@@ -38,7 +66,6 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   try {
     console.log(`👑 Iniciando o registro de ${commands.length} comandos slash (/) do PaimonBot.`);
 
-    // Registrar comandos globalmente (remove qualquer comando de moderação anterior)
     const data = await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
       { body: commands },

@@ -116,13 +116,25 @@ PORT=3000
 
 ## 🛠️ Comandos Disponíveis
 
-| Comando | Categoria | Descrição |
-| :--- | :--- | :--- |
-| `/rank [user]` | Utilidade | Exibe o Cartão de Viajante, Rank de Aventura (AR), EXP e barra de progresso. |
-| `/leaderboard` | Utilidade | Exibe o Mural dos Melhores Aventureiros (Top 10 com maior AR no servidor). |
-| `/wish` | Diversão | Realiza uma oração gacha com chances de armas 3⭐, personagens 4⭐ e 5⭐ lendários. |
-| `/food` | Diversão | Interage com a Paimon sobre a comida de emergência. |
-| `/paimon` | Diversão | Pede um conselho ou citação divertida da Paimon. |
+| Comando | Categoria | Permissão | Descrição |
+| :--- | :--- | :--- | :--- |
+| `/rank [user]` | Utilidade | Todos | Exibe o Cartão de Viajante, Rank de Aventura (AR), EXP e barra de progresso. |
+| `/leaderboard` | Utilidade | Todos | Exibe o Mural dos Melhores Aventureiros (Top 10 com maior AR no servidor). |
+| `/wish` | Diversão | Todos | Realiza uma oração gacha com chances de armas 3⭐, personagens 4⭐ e 5⭐ lendários. |
+| `/food` | Diversão | Todos | Interage com a Paimon sobre a comida de emergência. |
+| `/paimon` | Diversão | Todos | Pede um conselho ou citação divertida da Paimon. |
+| `/paimon-config spicy-mode <ativar>` | Admin | **Admin/Cargo** | Ativa ou desativa o **Modo Atrevido / Sem Censura Fofo** (xingamentos cômicos de anime). |
+| `/paimon-config set-admin-role <cargo>` | Admin | **Admin/Owner** | Define um cargo com acesso para gerenciar as configurações da Paimon. |
+| `/paimon-config status` | Admin | **Admin/Cargo** | Exibe o status atual das feature flags e cargos do servidor. |
+
+---
+
+## 🌶️ Feature Flag: Modo Atrevido / Sem Censura Fofo (Spicy Mode)
+
+Quando ativado por um Administrador via `/paimon-config spicy-mode ativar:True`:
+- A Paimon ganha uma persona atrevida, debochada e sem papas na língua.
+- Se o usuário pedir para ser xingado ou zoado, a Paimon solta insultos fofos e hilários de anime/Genshin (*"seu boboca!", "cabeça de slime!", "troglodita de hilichurl!", "bobo da corte que nem sabe achar um baú!"*).
+- Quando desativado (`ativar:False`), ela retorna ao modo dócil e educado padrão.
 
 ---
 
