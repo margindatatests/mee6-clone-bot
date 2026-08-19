@@ -1,60 +1,118 @@
-const fs = require('fs');
+const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-// Initialize database file in the project folder
-const dbPath = path.join(__dirname, 'database.json');
+const dbPath = path.join(__dirname, 'paimon.db');
+let db = null;
 
-let data = {
-  users: {}
-};
+// Prepared statements cache
+let stmts = {};
 
-// Load database from file
 function init() {
-  if (fs.existsSync(dbPath)) {
+  // Conectar ao SQLite com opções de alta performance
+  db = new Database(dbPath);
+  
+  // Ativar modo WAL (Write-Ahead Logging) e sincronização otimizada
+  db.pragma('journal_mode = WAL');
+  db.pragma('synchronous = NORMAL');
+  db.pragma('temp_store = MEMORY');
+
+  // Criar tabela de usuários e índice B-Tree para Leaderboard
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      guild_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      xp INTEGER NOT NULL DEFAULT 0,
+      level INTEGER NOT NULL DEFAULT 0,
+      last_xp_time INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (guild_id, user_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_users_leaderboard ON users (guild_id, level DESC, xp DESC);
+  `);
+
+  // Compilar Prepared Statements para velocidade máxima (sub-milissegundo)
+  stmts = {
+    getUser: db.prepare('SELECT * FROM users WHERE guild_id = ? AND user_id = ?'),
+    createUser: db.prepare('INSERT OR IGNORE INTO users (guild_id, user_id, xp, level, last_xp_time) VALUES (?, ?, 0, 0, 0)'),
+    updateUserXp: db.prepare('UPDATE users SET xp = ?, level = ? WHERE guild_id = ? AND user_id = ?'),
+    updateCooldown: db.prepare('UPDATE users SET last_xp_time = ? WHERE guild_id = ? AND user_id = ?'),
+    getLeaderboard: db.prepare('SELECT user_id, xp, level FROM users WHERE guild_id = ? ORDER BY level DESC, xp DESC LIMIT ?'),
+    getRankPosition: db.prepare(`
+      SELECT COUNT(*) + 1 AS position 
+      FROM users 
+      WHERE guild_id = ? AND (level > ? OR (level = ? AND xp > ?))
+    `),
+    importUser: db.prepare(`
+      INSERT OR REPLACE INTO users (guild_id, user_id, xp, level, last_xp_time) 
+      VALUES (?, ?, ?, ?, ?)
+    `)
+  };
+
+  // Migração automática do antigo database.json (se existir)
+  migrateFromJsonIfPresent();
+
+  console.log('🗄️ Base de dados SQLite (Paimon.db) inicializada em modo WAL com sucesso!');
+}
+
+// Migrar dados do antigo database.json se ainda existir
+function migrateFromJsonIfPresent() {
+  const jsonPath = path.join(__dirname, 'database.json');
+  if (fs.existsSync(jsonPath)) {
     try {
-      const fileContent = fs.readFileSync(dbPath, 'utf8');
-      data = JSON.parse(fileContent);
-      if (!data.users) data.users = {};
+      const raw = fs.readFileSync(jsonPath, 'utf8');
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.users && Object.keys(parsed.users).length > 0) {
+        const count = Object.keys(parsed.users).length;
+        console.log(`🔄 Migrando ${count} usuários de database.json para SQLite...`);
+        
+        const insertMany = db.transaction((users) => {
+          for (const u of Object.values(users)) {
+            if (u.guild_id && u.user_id) {
+              stmts.importUser.run(
+                u.guild_id,
+                u.user_id,
+                u.xp || 0,
+                u.level || 0,
+                u.last_xp_time || 0
+              );
+            }
+          }
+        });
+
+        insertMany(parsed.users);
+        console.log('✅ Migração concluída com sucesso!');
+        // Renomear ficheiro antigo como backup
+        fs.renameSync(jsonPath, path.join(__dirname, 'database.json.backup'));
+      }
     } catch (e) {
-      console.error("Error reading database.json, initializing fresh db:", e);
-      save();
+      console.error('Erro na migração de database.json:', e);
     }
-  } else {
-    save();
   }
 }
 
-// Save database to file
-function save() {
-  try {
-    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf8');
-  } catch (e) {
-    console.error("Failed to write to database.json:", e);
-  }
-}
-
-// Formula for XP needed to reach next level
+// Fórmula para EXP necessária para o próximo Rank de Aventura (AR)
 function getXpNeededForNextLevel(level) {
   return 5 * (level ** 2) + 50 * level + 100;
 }
 
-// Get user data
+// Obter usuário da base de dados (cria se não existir)
 function getUser(guildId, userId) {
-  const key = `${guildId}-${userId}`;
-  if (!data.users[key]) {
-    data.users[key] = {
+  let user = stmts.getUser.get(guildId, userId);
+  if (!user) {
+    stmts.createUser.run(guildId, userId);
+    user = {
       guild_id: guildId,
       user_id: userId,
       xp: 0,
       level: 0,
       last_xp_time: 0
     };
-    save();
   }
-  return data.users[key];
+  return user;
 }
 
-// Add XP and check for level ups
+// Adicionar EXP e calcular subida de Rank de Aventura
 function addXp(guildId, userId, amount) {
   const user = getUser(guildId, userId);
   const oldLevel = user.level;
@@ -73,10 +131,8 @@ function addXp(guildId, userId, amount) {
     }
   }
 
-  // Update in-memory database
-  user.xp = newXp;
-  user.level = currentLevel;
-  save();
+  // Atualizar na base de dados SQLite
+  stmts.updateUserXp.run(newXp, currentLevel, guildId, userId);
 
   return {
     leveledUp,
@@ -86,24 +142,20 @@ function addXp(guildId, userId, amount) {
   };
 }
 
-// Update the cooldown timestamp
+// Atualizar timestamp de cooldown
 function updateCooldown(guildId, userId, timestamp) {
-  const user = getUser(guildId, userId);
-  user.last_xp_time = timestamp;
-  save();
+  stmts.updateCooldown.run(timestamp, guildId, userId);
 }
 
-// Get leaderboard for a specific guild
+// Obter Leaderboard do servidor (Mural de Aventureiros)
 function getLeaderboard(guildId, limit = 10) {
-  const guildUsers = Object.values(data.users).filter(u => u.guild_id === guildId);
-  // Sort by level desc, then by xp desc
-  guildUsers.sort((a, b) => {
-    if (b.level !== a.level) {
-      return b.level - a.level;
-    }
-    return b.xp - a.xp;
-  });
-  return guildUsers.slice(0, limit);
+  return stmts.getLeaderboard.all(guildId, limit);
+}
+
+// Obter posição exata de um usuário no ranking sem carregar todos os dados
+function getUserRankPosition(guildId, userId, level, xp) {
+  const row = stmts.getRankPosition.get(guildId, level, level, xp);
+  return row ? row.position : 1;
 }
 
 module.exports = {
@@ -112,5 +164,6 @@ module.exports = {
   addXp,
   updateCooldown,
   getLeaderboard,
+  getUserRankPosition,
   getXpNeededForNextLevel
 };

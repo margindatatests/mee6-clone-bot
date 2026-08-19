@@ -8,5 +8,5 @@ services:
     env_file:
       - .env
     volumes:
-      - ./database.json:/app/database.json
+      - ./paimon.db:/app/paimon.db
       - ./config.json:/app/config.json

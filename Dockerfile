@@ -1,20 +1,16 @@
-# Use lightweight official Node.js LTS image
-FROM node:20-alpine
+FROM node:18-alpine
 
-# Set working directory inside container
 WORKDIR /app
 
-# Copy package definition files
+# Instalar ferramentas de build nativo para o Alpine
+RUN apk add --no-cache python3 make g++
+
 COPY package*.json ./
 
-# Install production dependencies
-RUN npm ci --only=production
+RUN npm install --production
 
-# Copy application source code
 COPY . .
 
-# Expose HTTP port if needed
 EXPOSE 3000
 
-# Command to run the bot
 CMD ["node", "index.js"]
