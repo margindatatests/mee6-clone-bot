@@ -112,3 +112,22 @@ docker compose up -d --build
 git pull
 docker compose down && docker compose up -d --build
 ```
+
+---
+
+## 🔗 Links de Convite & Segurança (Princípio do Menor Privilégio)
+
+Para garantir segurança máxima e evitar privilégios desnecessários (*como permissão de Administrador*), utilize os links com escopo e permissões mínimas:
+
+- **Permissões Mínimas Recomendadas (Chat, Níveis, Gacha e Moderação):**
+  > Permissões: `125958` (Ver canais, Enviar mensagens, Anexar arquivos, Inserir links, Ler histórico, Gerenciar mensagens, Expulsar e Banir membros).
+  ```text
+  https://discord.com/api/oauth2/authorize?client_id=1530728822461431808&permissions=125958&scope=bot%20applications.commands
+  ```
+
+- **Apenas Chat & Gacha (Sem nenhuma permissão de Moderação):**
+  > Permissões: `117760` (Apenas visualização, envio de mensagens e embeds).
+  ```text
+  https://discord.com/api/oauth2/authorize?client_id=1530728822461431808&permissions=117760&scope=bot%20applications.commands
+  ```
+
