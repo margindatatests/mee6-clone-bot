@@ -84,9 +84,6 @@ PORT=3000
 | `/wish` | Diversão | Realiza uma oração gacha com chances de armas 3⭐, personagens 4⭐ e 5⭐ lendários. |
 | `/food` | Diversão | Interage com a Paimon sobre a comida de emergência. |
 | `/paimon` | Diversão | Pede um conselho ou citação divertida da Paimon. |
-| `/clear <quantidade>` | Moderação | Apaga de 1 a 100 mensagens no canal atual com uma rajada Anemo. |
-| `/kick <alvo> [motivo]` | Moderação | Expulsa um membro respeitando a hierarquia de cargos. |
-| `/ban <alvo> [motivo]` | Moderação | Bane um membro respeitando a hierarquia de cargos. |
 
 ---
 
@@ -115,19 +112,16 @@ docker compose down && docker compose up -d --build
 
 ---
 
-## 🔗 Links de Convite & Segurança (Princípio do Menor Privilégio)
+## 🔗 Link de Convite Oficial (Permissões Mínimas & Seguras)
 
-Para garantir segurança máxima e evitar privilégios desnecessários (*como permissão de Administrador*), utilize os links com escopo e permissões mínimas:
+O PaimonBot solicita **zero permissões destrutivas** (sem expulsão, sem banimento, sem apagar mensagens, sem administrador). Solicita apenas permissões de leitura/envio de mensagens para chat, embeds e EXP:
 
-- **Permissões Mínimas Recomendadas (Chat, Níveis, Gacha e Moderação):**
-  > Permissões: `125958` (Ver canais, Enviar mensagens, Anexar arquivos, Inserir links, Ler histórico, Gerenciar mensagens, Expulsar e Banir membros).
-  ```text
-  https://discord.com/api/oauth2/authorize?client_id=1530728822461431808&permissions=125958&scope=bot%20applications.commands
-  ```
+> Permissões: `117760` (Ver canais, Enviar mensagens, Inserir links/Embeds, Anexar arquivos e Ler histórico).
 
-- **Apenas Chat & Gacha (Sem nenhuma permissão de Moderação):**
-  > Permissões: `117760` (Apenas visualização, envio de mensagens e embeds).
-  ```text
-  https://discord.com/api/oauth2/authorize?client_id=1530728822461431808&permissions=117760&scope=bot%20applications.commands
-  ```
+👉 **[Convidar o PaimonBot com Permissões Seguras](https://discord.com/api/oauth2/authorize?client_id=1530728822461431808&permissions=117760&scope=bot%20applications.commands)**
+
+```text
+https://discord.com/api/oauth2/authorize?client_id=1530728822461431808&permissions=117760&scope=bot%20applications.commands
+```
+
 

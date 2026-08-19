@@ -25,38 +25,6 @@ const commands = [
   new SlashCommandBuilder()
     .setName('paimon')
     .setDescription('Peça um conselho ou ouça uma frase sábia da Paimon!'),
-
-  new SlashCommandBuilder()
-    .setName('clear')
-    .setDescription('Apaga uma quantidade específica de mensagens neste canal com uma rajada Anemo.')
-    .addIntegerOption(option => 
-      option.setName('amount')
-        .setDescription('Quantidade de mensagens a apagar (1-100)')
-        .setRequired(true)),
-
-  new SlashCommandBuilder()
-    .setName('kick')
-    .setDescription('Expulsa um membro do servidor.')
-    .addUserOption(option =>
-      option.setName('target')
-        .setDescription('O membro a ser expulso')
-        .setRequired(true))
-    .addStringOption(option =>
-      option.setName('reason')
-        .setDescription('Motivo da expulsão')
-        .setRequired(false)),
-
-  new SlashCommandBuilder()
-    .setName('ban')
-    .setDescription('Bane um membro do servidor.')
-    .addUserOption(option =>
-      option.setName('target')
-        .setDescription('O membro a ser banido')
-        .setRequired(true))
-    .addStringOption(option =>
-      option.setName('reason')
-        .setDescription('Motivo do banimento')
-        .setRequired(false)),
 ].map(command => command.toJSON());
 
 if (!process.env.DISCORD_TOKEN || !process.env.CLIENT_ID) {
@@ -70,7 +38,7 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
   try {
     console.log(`👑 Iniciando o registro de ${commands.length} comandos slash (/) do PaimonBot.`);
 
-    // Registrar comandos globalmente
+    // Registrar comandos globalmente (remove qualquer comando de moderação anterior)
     const data = await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
       { body: commands },
