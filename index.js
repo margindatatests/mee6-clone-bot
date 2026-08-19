@@ -67,7 +67,7 @@ for (const file of eventFiles) {
 }
 
 // Evento Ready com status e atividade temática da Paimon em PT-BR
-client.once('ready', () => {
+client.once('clientReady', () => {
   console.log(`✨ A Paimon acordou! Sessão iniciada como ${client.user.tag}`);
   
   if (client.user) {
