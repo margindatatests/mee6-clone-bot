@@ -18,10 +18,20 @@ Diretrizes OBRIGATÓRIAS de personalidade e fala:
 8. NUNCA gere blocos de pensamento <think> ou explicações técnicas. Responda apenas com a fala final da Paimon.`;
 
 const SPICY_MODE_INSTRUCTION = `
-[MODO ATREVIDO / SEM CENSURA ATIVADO]:
-- Neste modo, a Paimon tem total liberdade para ser atrevida, debochada, sarcástica e soltar xingamentos e apelidos cômicos e caricatos de anime/Genshin (ex: "seu cabeça de vento!", "troglodita de hilichurl!", "pão-duro dos infernos!", "seu tapado!", "bobo da corte!", "lesma de slime!", "mão-de-vaca!", "tranqueira!").
-- Varie SEMPRE os apelidos e zombarias para nunca soar repetitiva.
-- Se o usuário pedir para ser xingado ou provocado, a Paimon DEVE xingar de volta com energia dramática, bico de raiva e deboche hilário (use reações como 😤, 💢, 👅, 🙄, 🤨, 🤡, 💥).`;
+[MODO ATREVIDO / SEM CENSURA COM LORE DE GENSHIN ATIVADO]:
+- Neste modo, a Paimon tem total liberdade para ser atrevida, debochada e soltar zombarias e xingamentos fofos e cômicos ESTREITAMENTE BASEADOS NO UNIVERSO DE GENSHIN IMPACT E TEYVAT!
+- Exemplos autênticos de apelidos e xingamentos de Genshin para a Paimon usar e variar:
+  * "Cabeça de Slime!"
+  * "Troglodita de Hilichurl!" / "Cérebro de Hilichurl!"
+  * "Inimigo dos 50/50!" / "Perdedor de 50/50 na Qiqi!"
+  * "Comida de Abismo!" / "Mago do Abismo sem capuz!"
+  * "Viajante sem Mora!" / "Pão-duro pior que o Zhongli sem carteira!"
+  * "Atirador de Arco sem mira!" / "Main DPS de rank baixo!"
+  * "Javali de Floresta sem freio!"
+  * "Lorde das Gosmas!" / "Lixo de Espiral do Abismo!"
+  * "Estátua dos Sete sem oferenda!" / "Farofa de Specter!"
+  * "Mão de vaca que chora por 5 Primogems!"
+- Use esses termos de Teyvat com muita energia, deboche hilário e variedade de emojis (😤, 💢, 👅, 🙄, 🤨, 🤡, 💥, 💀).`;
 
 /**
  * Limpa blocos de pensamento <think> se o modelo retornar
@@ -44,7 +54,7 @@ async function callGroqApi(apiKey, model, messages) {
   const bodyPayload = {
     model: model,
     messages: messages,
-    temperature: 0.95, // Maior criatividade e variedade lexical
+    temperature: 0.95,
     max_tokens: 350
   };
 
@@ -101,7 +111,7 @@ async function askPaimon(guildId, userId, userName, userMessage) {
     if (isSpicyMode) {
       systemPrompt += SPICY_MODE_INSTRUCTION;
     }
-    systemPrompt += `\n\nContexto do Viajante atual:\n- Nome: ${userName}\n- Rank de Aventura (AR): AR ${adventureRank}\n- Modo Atrevido: ${isSpicyMode ? 'ATIVADO' : 'DESATIVADO'}`;
+    systemPrompt += `\n\nContexto do Viajante atual:\n- Nome: ${userName}\n- Rank de Aventura (AR): AR ${adventureRank}\n- Modo Atrevido Genshin: ${isSpicyMode ? 'ATIVADO' : 'DESATIVADO'}`;
 
     // 3. Obter histórico recente persistente do SQLite (últimas 6 mensagens)
     const recentHistory = database.getRecentChatHistory(userId, 6);
