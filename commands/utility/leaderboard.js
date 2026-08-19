@@ -5,31 +5,37 @@ const config = require('../../config.json');
 module.exports = {
   data: {
     name: 'leaderboard',
+    description: 'Mostra o Mural dos Melhores Aventureiros (Top 10 do servidor).'
   },
   async execute(interaction) {
     const guildId = interaction.guild.id;
     const topUsers = database.getLeaderboard(guildId, 10);
 
     if (topUsers.length === 0) {
-      return interaction.reply({ content: 'Ainda não há dados de XP para este servidor. Começa a conversar para ganhar XP!', ephemeral: true });
+      return interaction.reply({ 
+        content: '📜 O Mural de Aventureiros ainda está vazio! Comecem a conversar no chat para ganhar EXP e subir no Rank de Aventura!', 
+        ephemeral: true 
+      });
     }
 
     const embed = new EmbedBuilder()
-      .setTitle(`🏆 Classificação do Servidor - ${interaction.guild.name}`)
-      .setColor(config.embedColor || '#5865F2')
+      .setTitle(`🏆 Mural dos Melhores Aventureiros — ${interaction.guild.name}`)
+      .setDescription('Aqui estão os Viajantes com maior **Rank de Aventura (AR)** e dedicação no servidor!\n')
+      .setColor(config.embedColor || '#F3C343')
       .setThumbnail(interaction.guild.iconURL({ dynamic: true }))
+      .setFooter({ text: 'PaimonBot • Continua a explorar para alcançares o topo!' })
       .setTimestamp();
 
     let description = '';
     
     topUsers.forEach((user, index) => {
-      let position = '';
-      if (index === 0) position = '🥇 ';
-      else if (index === 1) position = '🥈 ';
-      else if (index === 2) position = '🥉 ';
-      else position = `**#${index + 1}** `;
+      let medal = '';
+      if (index === 0) medal = '🥇 ';
+      else if (index === 1) medal = '🥈 ';
+      else if (index === 2) medal = '🥉 ';
+      else medal = `**#${index + 1}** `;
 
-      description += `${position}<@${user.user_id}> — Nível **${user.level}** (XP: \`${user.xp}\`)\n`;
+      description += `${medal}<@${user.user_id}> — **AR ${user.level}** (EXP: \`${user.xp}\`)\n`;
     });
 
     embed.setDescription(description);

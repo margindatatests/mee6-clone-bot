@@ -14,7 +14,10 @@ module.exports = {
       await command.execute(interaction);
     } catch (error) {
       console.error(`Erro ao executar comando ${interaction.commandName}:`, error);
-      const replyContent = { content: 'Ocorreu um erro ao executar este comando!', ephemeral: true };
+      const replyContent = { 
+        content: 'Eep! 😖 A Paimon tropeçou e ocorreu um erro ao executar este comando!', 
+        ephemeral: true 
+      };
       
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp(replyContent);

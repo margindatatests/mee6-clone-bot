@@ -5,41 +5,49 @@ const config = require('../../config.json');
 module.exports = {
   data: {
     name: 'rank',
+    description: 'Mostra o teu Cartão de Viajante e Rank de Aventura (AR).'
   },
   async execute(interaction) {
     const targetUser = interaction.options.getUser('user') || interaction.user;
     
-    // Ignore bots
+    // Ignorar bots
     if (targetUser.bot) {
-      return interaction.reply({ content: 'Os bots não acumulam nível nem XP!', ephemeral: true });
+      return interaction.reply({ 
+        content: '🤖 Ei! Os autômatos e bots não ganham Rank de Aventura nem EXP!', 
+        ephemeral: true 
+      });
     }
 
     const guildId = interaction.guild.id;
     const user = database.getUser(guildId, targetUser.id);
     const xpNeeded = database.getXpNeededForNextLevel(user.level);
 
-    // Calculate percentage and build a progress bar
+    // Calcular percentagem e barra de progresso temática
     const percent = Math.min(Math.floor((user.xp / xpNeeded) * 100), 100);
     const filledBlocks = Math.min(Math.floor(percent / 10), 10);
     const emptyBlocks = 10 - filledBlocks;
-    const progressBar = '▰'.repeat(filledBlocks) + '▱'.repeat(emptyBlocks);
+    const progressBar = '⭐'.repeat(Math.min(filledBlocks, 5)) + '✨'.repeat(Math.max(0, filledBlocks - 5)) + '▪️'.repeat(emptyBlocks);
 
-    // Get leaderboard to find the user's rank position
+    // Posição no leaderboard
     const guildUsers = database.getLeaderboard(guildId, 9999);
     const rankPosition = guildUsers.findIndex(u => u.user_id === targetUser.id) + 1;
-    const rankStr = rankPosition > 0 ? `#${rankPosition}` : 'N/A';
+    const rankStr = rankPosition > 0 ? `#${rankPosition}` : 'Sem Classificação';
 
     const embed = new EmbedBuilder()
-      .setAuthor({ name: targetUser.tag, iconURL: targetUser.displayAvatarURL({ dynamic: true }) })
-      .setTitle(`Rank de ${targetUser.username}`)
-      .setColor(config.embedColor || '#5865F2')
+      .setAuthor({ 
+        name: `Cartão de Viajante - ${targetUser.tag}`, 
+        iconURL: targetUser.displayAvatarURL({ dynamic: true }) 
+      })
+      .setTitle(`📜 Perfil de Aventureiro de ${targetUser.username}`)
+      .setColor(config.embedColor || '#F3C343')
       .addFields(
-        { name: 'Nível', value: `⭐ **${user.level}**`, inline: true },
-        { name: 'XP', value: `✨ **${user.xp}** / ${xpNeeded}`, inline: true },
-        { name: 'Posição', value: `🏆 **${rankStr}**`, inline: true },
-        { name: 'Progresso para o Nível ' + (user.level + 1), value: `\`${progressBar}\` (${percent}%)`, inline: false }
+        { name: '🎖️ Rank de Aventura (AR)', value: `**AR ${user.level}**`, inline: true },
+        { name: '✨ EXP de Aventura', value: `\`${user.xp}\` / \`${xpNeeded}\``, inline: true },
+        { name: '🏆 Posição em Teyvat', value: `**${rankStr}**`, inline: true },
+        { name: `⚡ Progresso para AR ${user.level + 1}`, value: `${progressBar} (${percent}%)`, inline: false }
       )
       .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 256 }))
+      .setFooter({ text: 'PaimonBot • O melhor guia de viagem de Teyvat!' })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });

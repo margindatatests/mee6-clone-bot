@@ -1,7 +1,7 @@
 {
-  "name": "mee6-clone-bot",
+  "name": "paimonbot",
   "version": "1.0.0",
-  "description": "A custom MEE6-like Discord bot with moderation, leveling, and welcoming systems.",
+  "description": "PaimonBot - O melhor guia de viagem e assistente para o teu servidor Discord!",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {

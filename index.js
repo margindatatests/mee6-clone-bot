@@ -1,23 +1,23 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
-const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, ActivityType } = require('discord.js');
 const database = require('./database');
 require('dotenv').config();
 
-// Dummy HTTP health check server for Render Web Service (Free Tier)
+// Servidor HTTP de verificação de integridade / Keep-alive
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('🤖 Bot GatoPreto está online e ativo!');
+  res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end('👑 PaimonBot está online e pronta para explorar Teyvat!');
 }).listen(PORT, () => {
-  console.log(`🌐 Servidor HTTP de verificação ativo na porta ${PORT}`);
+  console.log(`🌐 Servidor HTTP do PaimonBot ativo na porta ${PORT}`);
 });
 
-// Initialize the local JSON database
+// Inicializar a base de dados local
 database.init();
 
-// Initialize Discord Client with necessary intents
+// Inicializar cliente Discord com intents necessários
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -27,29 +27,31 @@ const client = new Client({
   ]
 });
 
-// Setup command collection
+// Coleção de comandos
 client.commands = new Collection();
 
-// Load slash commands dynamically
+// Carregar comandos slash dinamicamente de todas as subpastas
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
 for (const folder of commandFolders) {
   const commandsPath = path.join(foldersPath, folder);
-  const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-  for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
-    const command = require(filePath);
-    
-    if ('data' in command && 'execute' in command) {
-      client.commands.set(command.data.name, command);
-    } else {
-      console.warn(`[AVISO] O comando em ${filePath} está em falta com as propriedades obrigatórias "data" or "execute".`);
+  if (fs.lstatSync(commandsPath).isDirectory()) {
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) {
+      const filePath = path.join(commandsPath, file);
+      const command = require(filePath);
+      
+      if ('data' in command && 'execute' in command) {
+        client.commands.set(command.data.name, command);
+      } else {
+        console.warn(`[AVISO] O comando em ${filePath} não contém as propriedades obrigatórias "data" ou "execute".`);
+      }
     }
   }
 }
 
-// Load event handlers dynamically
+// Carregar manipuladores de eventos dinamicamente
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
@@ -64,12 +66,19 @@ for (const file of eventFiles) {
   }
 }
 
-// Register ready event inside index.js for quick status logging
+// Evento Ready com status e atividade temática da Paimon
 client.once('ready', () => {
-  console.log(`🤖 Bot iniciado com sucesso! Sessão iniciada como ${client.user.tag}`);
+  console.log(`✨ Paimon acordou! Sessão iniciada como ${client.user.tag}`);
+  
+  if (client.user) {
+    client.user.setPresence({
+      activities: [{ name: 'a comer comida de emergência 🍰 | /paimon', type: ActivityType.Playing }],
+      status: 'online'
+    });
+  }
 });
 
-// Log in to Discord
+// Iniciar sessão no Discord
 if (!process.env.DISCORD_TOKEN) {
   console.error('ERRO: A variável DISCORD_TOKEN não está definida no ficheiro .env!');
   process.exit(1);

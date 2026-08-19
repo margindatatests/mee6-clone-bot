@@ -57,6 +57,7 @@ function getUser(guildId, userId) {
 // Add XP and check for level ups
 function addXp(guildId, userId, amount) {
   const user = getUser(guildId, userId);
+  const oldLevel = user.level;
   let newXp = user.xp + amount;
   let currentLevel = user.level;
   let leveledUp = false;
@@ -79,7 +80,7 @@ function addXp(guildId, userId, amount) {
 
   return {
     leveledUp,
-    oldLevel: user.level,
+    oldLevel,
     newLevel: currentLevel,
     xp: newXp
   };
