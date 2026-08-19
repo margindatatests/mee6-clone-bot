@@ -57,10 +57,14 @@ paimonbot/
 
 ---
 
-## 🤖 Inteligência Artificial Natural (Groq AI)
+## 🤖 Inteligência Artificial Natural (Groq AI & Memória Persistente)
 
-O PaimonBot conta com um cérebro de IA ultrarrápido conectado à API do **Groq** (`groq/compound-mini`), respondendo em linguagem natural em menos de **0.3 segundos**:
+O PaimonBot conta com um cérebro de IA ultrarrápido conectado à API do **Groq** (`qwen/qwen3.6-27b` com fallback para `groq/compound-mini`), respondendo em linguagem natural com **memória persistente por usuário**:
 
+- **Memória de Longo Prazo (SQLite):**
+  - Cada conversa é salva na tabela `chat_messages` no banco [`paimon.db`](file:///p:/Web/paimonbot/paimon.db).
+  - A Paimon lembra do contexto das últimas mensagens com cada Viajante, mesmo após dias ou reinicializações do bot.
+  - A Paimon tem consciência em tempo real do **Rank de Aventura (AR)** do usuário obtido do sistema de EXP.
 - **Gatilhos Automáticos:**
   - Quando alguém menciona `@PaimonBot` no chat.
   - Quando alguém fala a palavra `"paimon"` ou `"Paimon"` na mensagem.

@@ -17,8 +17,9 @@ function init() {
   db.pragma('synchronous = NORMAL');
   db.pragma('temp_store = MEMORY');
 
-  // Criar tabela de usuários e índice B-Tree para Leaderboard
+  // Criar tabelas e índices
   db.exec(`
+    -- Tabela de usuários e níveis
     CREATE TABLE IF NOT EXISTS users (
       guild_id TEXT NOT NULL,
       user_id TEXT NOT NULL,
@@ -29,6 +30,28 @@ function init() {
     );
 
     CREATE INDEX IF NOT EXISTS idx_users_leaderboard ON users (guild_id, level DESC, xp DESC);
+
+    -- Tabela de histórico persistente de conversas com a Paimon
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      guild_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      role TEXT NOT NULL, -- 'user' ou 'assistant'
+      content TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_chat_messages_user ON chat_messages (user_id, created_at DESC);
+
+    -- Tabela de fatos e memórias de longo prazo sobre cada Viajante
+    CREATE TABLE IF NOT EXISTS user_memories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      memory TEXT NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_user_memories ON user_memories (user_id);
   `);
 
   // Compilar Prepared Statements para velocidade máxima (sub-milissegundo)
@@ -43,57 +66,32 @@ function init() {
       FROM users 
       WHERE guild_id = ? AND (level > ? OR (level = ? AND xp > ?))
     `),
-    importUser: db.prepare(`
-      INSERT OR REPLACE INTO users (guild_id, user_id, xp, level, last_xp_time) 
+    
+    // Histórico de Conversa Persistente
+    saveChatMessage: db.prepare(`
+      INSERT INTO chat_messages (guild_id, user_id, role, content, created_at)
       VALUES (?, ?, ?, ?, ?)
-    `)
+    `),
+    getRecentChatHistory: db.prepare(`
+      SELECT role, content 
+      FROM chat_messages 
+      WHERE user_id = ? 
+      ORDER BY created_at DESC 
+      LIMIT ?
+    `),
+    cleanOldChatMessages: db.prepare(`
+      DELETE FROM chat_messages 
+      WHERE user_id = ? AND id NOT IN (
+        SELECT id FROM chat_messages WHERE user_id = ? ORDER BY created_at DESC LIMIT 20
+      )
+    `),
+
+    // Memórias de Longo Prazo
+    getUserMemories: db.prepare('SELECT memory FROM user_memories WHERE user_id = ? ORDER BY created_at DESC LIMIT 5'),
+    saveUserMemory: db.prepare('INSERT INTO user_memories (user_id, memory, created_at) VALUES (?, ?, ?)')
   };
 
-  // Migração automática do antigo database.json (se existir)
-  migrateFromJsonIfPresent();
-
-  console.log('🗄️ Base de dados SQLite (Paimon.db) inicializada em modo WAL com sucesso!');
-}
-
-// Migrar dados do antigo database.json se ainda existir
-function migrateFromJsonIfPresent() {
-  const jsonPath = path.join(__dirname, 'database.json');
-  if (fs.existsSync(jsonPath)) {
-    try {
-      const raw = fs.readFileSync(jsonPath, 'utf8');
-      const parsed = JSON.parse(raw);
-      if (parsed && parsed.users && Object.keys(parsed.users).length > 0) {
-        const count = Object.keys(parsed.users).length;
-        console.log(`🔄 Migrando ${count} usuários de database.json para SQLite...`);
-        
-        const insertMany = db.transaction((users) => {
-          for (const u of Object.values(users)) {
-            if (u.guild_id && u.user_id) {
-              stmts.importUser.run(
-                u.guild_id,
-                u.user_id,
-                u.xp || 0,
-                u.level || 0,
-                u.last_xp_time || 0
-              );
-            }
-          }
-        });
-
-        insertMany(parsed.users);
-        console.log('✅ Migração concluída com sucesso!');
-        // Renomear ficheiro antigo como backup
-        fs.renameSync(jsonPath, path.join(__dirname, 'database.json.backup'));
-      }
-    } catch (e) {
-      console.error('Erro na migração de database.json:', e);
-    }
-  }
-}
-
-// Fórmula para EXP necessária para o próximo Rank de Aventura (AR)
-function getXpNeededForNextLevel(level) {
-  return 5 * (level ** 2) + 50 * level + 100;
+  console.log('🗄️ Base de dados SQLite (Paimon.db) inicializada com suporte a Memória Persistente!');
 }
 
 // Obter usuário da base de dados (cria se não existir)
@@ -110,6 +108,11 @@ function getUser(guildId, userId) {
     };
   }
   return user;
+}
+
+// Fórmula para EXP necessária para o próximo Rank de Aventura (AR)
+function getXpNeededForNextLevel(level) {
+  return 5 * (level ** 2) + 50 * level + 100;
 }
 
 // Adicionar EXP e calcular subida de Rank de Aventura
@@ -152,10 +155,32 @@ function getLeaderboard(guildId, limit = 10) {
   return stmts.getLeaderboard.all(guildId, limit);
 }
 
-// Obter posição exata de um usuário no ranking sem carregar todos os dados
+// Obter posição exata de um usuário no ranking
 function getUserRankPosition(guildId, userId, level, xp) {
   const row = stmts.getRankPosition.get(guildId, level, level, xp);
   return row ? row.position : 1;
+}
+
+// Salvar mensagem no histórico persistente da conversa
+function saveChatMessage(guildId, userId, role, content) {
+  const now = Date.now();
+  stmts.saveChatMessage.run(guildId, userId, role, content, now);
+  
+  // Limpeza assíncrona/rápida para manter apenas as últimas 20 mensagens por usuário
+  try {
+    stmts.cleanOldChatMessages.run(userId, userId);
+  } catch (e) {}
+}
+
+// Obter histórico recente ordenado cronologicamente (do mais antigo para o mais recente)
+function getRecentChatHistory(userId, limit = 6) {
+  const rows = stmts.getRecentChatHistory.all(userId, limit);
+  return rows.reverse(); // Inverter para enviar na ordem correta da conversa
+}
+
+// Obter memórias de longo prazo do usuário
+function getUserMemories(userId) {
+  return stmts.getUserMemories.all(userId).map(r => r.memory);
 }
 
 module.exports = {
@@ -165,5 +190,8 @@ module.exports = {
   updateCooldown,
   getLeaderboard,
   getUserRankPosition,
-  getXpNeededForNextLevel
+  getXpNeededForNextLevel,
+  saveChatMessage,
+  getRecentChatHistory,
+  getUserMemories
 };

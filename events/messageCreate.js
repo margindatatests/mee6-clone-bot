@@ -5,7 +5,7 @@ const { askPaimon } = require('../ai');
 // Cache em memória RAM para verificação instantânea de cooldown de EXP (0.0001ms)
 const xpCooldownCache = new Map();
 
-// Cache em memória para rate-limit de chamadas da IA da Paimon (3s por usuário)
+// Cache em memória para rate-limit de chamadas da IA da Paimon (2.5s por usuário)
 const aiCooldownCache = new Map();
 
 // Limpeza periódica do cache a cada 30 minutos para evitar fugas de memória
@@ -37,7 +37,7 @@ module.exports = {
     const now = Date.now();
 
     // ==========================================
-    // 1. SISTEMA DE RESPOSTA IA NATURAL (GROQ)
+    // 1. SISTEMA DE RESPOSTA IA NATURAL (GROQ + MEMÓRIA PERSISTENTE)
     // ==========================================
     const isMentioned = message.mentions.has(message.client.user.id);
     const mentionsPaimon = /\bpaimon\b/i.test(message.content);
@@ -67,7 +67,7 @@ module.exports = {
         if (cleanPrompt) {
           try {
             await message.channel.sendTyping();
-            const aiAnswer = await askPaimon(message.author.username, cleanPrompt);
+            const aiAnswer = await askPaimon(guildId, userId, message.author.username, cleanPrompt);
             if (aiAnswer) {
               await message.reply({ 
                 content: aiAnswer,
