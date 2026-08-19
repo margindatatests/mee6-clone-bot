@@ -43,7 +43,8 @@ paimonbot/
 ├── events/                 # Manipuladores de eventos do Discord
 │   ├── guildMemberAdd.js   # Boas-vindas para novos membros
 │   ├── interactionCreate.js# Execução e tratamento de comandos slash
-│   └── messageCreate.js    # Atribuição de EXP com cache em RAM e Prepared Statements
+│   └── messageCreate.js    # Atribuição de EXP, respostas naturais com Groq AI e Level Up
+├── ai.js                   # Módulo de Inteligência Artificial da Paimon com a API do Groq
 ├── config.json             # Cores dos embeds, canais e taxas de EXP
 ├── database.js             # Camada de banco de dados SQLite (better-sqlite3 em modo WAL)
 ├── paimon.db               # Banco de dados SQLite persistente de alta velocidade
@@ -53,6 +54,22 @@ paimonbot/
 ├── index.js                # Ponto de entrada do bot e servidor HTTP
 └── package.json            # Dependências e scripts npm
 ```
+
+---
+
+## 🤖 Inteligência Artificial Natural (Groq AI)
+
+O PaimonBot conta com um cérebro de IA ultrarrápido conectado à API do **Groq** (`groq/compound-mini`), respondendo em linguagem natural em menos de **0.3 segundos**:
+
+- **Gatilhos Automáticos:**
+  - Quando alguém menciona `@PaimonBot` no chat.
+  - Quando alguém fala a palavra `"paimon"` ou `"Paimon"` na mensagem.
+  - Quando alguém responde diretamente a uma mensagem da Paimon no Discord.
+- **Proteção Anti-Spam:**
+  - Rate-limit de 2.5s por usuário em memória RAM.
+  - Indicador de digitação (`sendTyping()`) em tempo real enquanto a Paimon elabora a resposta.
+- **Persona Imersiva:**
+  - Falas estritamente em 3ª pessoa, PT-BR, com amor por comida/Mora e reações dramáticas sobre comida de emergência.
 
 ---
 
