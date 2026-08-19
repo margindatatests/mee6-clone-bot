@@ -3,12 +3,18 @@ const path = require('path');
 const fs = require('fs');
 
 const dbPath = path.join(__dirname, 'paimon.db');
+const backupsDir = path.join(__dirname, 'backups');
 let db = null;
 
 // Prepared statements cache
 let stmts = {};
 
 function init() {
+  // Garantir que a pasta de backups existe
+  if (!fs.existsSync(backupsDir)) {
+    fs.mkdirSync(backupsDir, { recursive: true });
+  }
+
   // Conectar ao SQLite com opções de alta performance
   db = new Database(dbPath);
   
@@ -16,6 +22,7 @@ function init() {
   db.pragma('journal_mode = WAL');
   db.pragma('synchronous = NORMAL');
   db.pragma('temp_store = MEMORY');
+  db.pragma('cache_size = -64000'); // 64MB cache em RAM para leituras instantâneas
 
   // Criar tabelas e índices
   db.exec(`
@@ -34,7 +41,7 @@ function init() {
     -- Tabela de configurações por servidor (Feature Flags)
     CREATE TABLE IF NOT EXISTS guild_settings (
       guild_id TEXT PRIMARY KEY,
-      spicy_mode INTEGER NOT NULL DEFAULT 0, -- 0 = desativado, 1 = ativado (modo atrevido/fofo)
+      spicy_mode INTEGER NOT NULL DEFAULT 0,
       ai_enabled INTEGER NOT NULL DEFAULT 1,
       admin_role_id TEXT DEFAULT NULL,
       updated_at INTEGER NOT NULL
@@ -45,7 +52,7 @@ function init() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       guild_id TEXT NOT NULL,
       user_id TEXT NOT NULL,
-      role TEXT NOT NULL, -- 'user' ou 'assistant'
+      role TEXT NOT NULL,
       content TEXT NOT NULL,
       created_at INTEGER NOT NULL
     );
@@ -63,7 +70,7 @@ function init() {
     CREATE INDEX IF NOT EXISTS idx_user_memories ON user_memories (user_id);
   `);
 
-  // Compilar Prepared Statements para velocidade máxima (sub-milissegundo)
+  // Compilar Prepared Statements para velocidade máxima
   stmts = {
     getUser: db.prepare('SELECT * FROM users WHERE guild_id = ? AND user_id = ?'),
     createUser: db.prepare('INSERT OR IGNORE INTO users (guild_id, user_id, xp, level, last_xp_time) VALUES (?, ?, 0, 0, 0)'),
@@ -113,7 +120,72 @@ function init() {
     saveUserMemory: db.prepare('INSERT INTO user_memories (user_id, memory, created_at) VALUES (?, ?, ?)')
   };
 
-  console.log('🗄️ Base de dados SQLite (Paimon.db) inicializada com suporte a RBAC & Feature Flags!');
+  // Agendar otimização e backup diário automático (a cada 24 horas)
+  setInterval(() => {
+    runDatabaseMaintenance();
+  }, 24 * 60 * 60 * 1000).unref();
+
+  console.log('🗄️ Base de dados SQLite (Paimon.db) inicializada com suporte a RBAC & Performance!');
+}
+
+/**
+ * Manutenção automática: Otimiza índices e gera backup online sem travar o bot
+ */
+function runDatabaseMaintenance() {
+  if (!db) return;
+  try {
+    console.log('🧹 [SQLITE] Executando manutenção automática e backup diário...');
+    db.pragma('optimize');
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupFile = path.join(backupsDir, `paimon_backup_${timestamp}.db`);
+    
+    // Backup online sem bloqueio do SQLite
+    db.backup(backupFile)
+      .then(() => {
+        console.log(`✅ [SQLITE] Backup automático concluído: ${backupFile}`);
+        // Manter apenas os 7 backups mais recentes
+        cleanOldBackups();
+      })
+      .catch(err => {
+        console.error('❌ [SQLITE] Erro ao gerar backup automático:', err);
+      });
+  } catch (err) {
+    console.error('❌ [SQLITE] Erro na manutenção do banco:', err);
+  }
+}
+
+/**
+ * Limpa backups com mais de 7 dias
+ */
+function cleanOldBackups() {
+  try {
+    const files = fs.readdirSync(backupsDir)
+      .filter(f => f.startsWith('paimon_backup_') && f.endsWith('.db'))
+      .map(f => ({ name: f, path: path.join(backupsDir, f), time: fs.statSync(path.join(backupsDir, f)).mtime.getTime() }))
+      .sort((a, b) => b.time - a.time);
+
+    // Se houver mais de 7 backups, apaga os mais antigos
+    if (files.length > 7) {
+      files.slice(7).forEach(file => {
+        fs.unlinkSync(file.path);
+        console.log(`🗑️ [SQLITE] Backup antigo removido: ${file.name}`);
+      });
+    }
+  } catch (e) {}
+}
+
+/**
+ * Fechamento gracioso do banco de dados (Graceful Shutdown)
+ */
+function close() {
+  if (db) {
+    try {
+      console.log('🛑 [SQLITE] Fechando descritores do SQLite com segurança...');
+      db.close();
+      db = null;
+    } catch (e) {}
+  }
 }
 
 // Obter usuário da base de dados (cria se não existir)
@@ -233,6 +305,7 @@ function getUserMemories(userId) {
 
 module.exports = {
   init,
+  close,
   getUser,
   addXp,
   updateCooldown,
@@ -244,5 +317,6 @@ module.exports = {
   getUserMemories,
   getGuildSettings,
   setSpicyMode,
-  setAdminRole
+  setAdminRole,
+  runDatabaseMaintenance
 };

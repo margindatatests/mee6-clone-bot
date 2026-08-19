@@ -9,4 +9,5 @@ services:
       - .env
     volumes:
       - ./paimon.db:/app/paimon.db
+      - ./backups:/app/backups
       - ./config.json:/app/config.json
