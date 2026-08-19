@@ -12,7 +12,7 @@ module.exports = {
     // Verificar permissões do executor
     if (!interaction.member.permissions.has(PermissionFlagsBits.BanMembers)) {
       return interaction.reply({ 
-        content: '🚫 Ei! Não tens permissão de Cavaleiro de Favonius para banir membros!', 
+        content: '🚫 Ei! Você não tem permissão de Cavaleiro de Favonius para banir membros!', 
         ephemeral: true 
       });
     }
@@ -45,7 +45,7 @@ module.exports = {
 
       if (targetMember.roles.highest.position >= interaction.member.roles.highest.position) {
         return interaction.reply({ 
-          content: '🛡️ Não podes banir este membro porque o cargo dele é igual ou superior ao teu!', 
+          content: '🛡️ Você não pode banir este membro porque o cargo dele é igual ou superior ao seu!', 
           ephemeral: true 
         });
       }
@@ -54,7 +54,7 @@ module.exports = {
     try {
       await interaction.guild.members.ban(targetUser.id, { reason });
       await interaction.reply({ 
-        content: `⚡ **${targetUser.tag}** foi banido de Teyvat!\n**Moderador:** ${interaction.user.tag}\n**Motivo:** ${reason}\n*A Paimon assegura que a ordem foi restabelecida!* 🛡️` 
+        content: `⚡ **${targetUser.tag}** foi banido(a) de Teyvat!\n**Moderador:** ${interaction.user.tag}\n**Motivo:** ${reason}\n*A Paimon assegura que a ordem foi restabelecida!* 🛡️` 
       });
     } catch (error) {
       console.error('Erro ao banir membro:', error);

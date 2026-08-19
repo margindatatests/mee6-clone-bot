@@ -12,7 +12,7 @@ module.exports = {
     // Verificar permissões
     if (!interaction.member.permissions.has(PermissionFlagsBits.KickMembers)) {
       return interaction.reply({ 
-        content: '🚫 Não tens permissão para expulsar membros do reino!', 
+        content: '🚫 Você não tem permissão para expulsar membros do reino!', 
         ephemeral: true 
       });
     }
@@ -39,13 +39,13 @@ module.exports = {
     }
 
     if (targetMember.roles.highest.position >= interaction.member.roles.highest.position) {
-      return interaction.reply({ content: '🛡️ Não podes expulsar este membro porque o cargo dele é igual ou superior ao teu!', ephemeral: true });
+      return interaction.reply({ content: '🛡️ Você não pode expulsar este membro porque o cargo dele é igual ou superior ao seu!', ephemeral: true });
     }
 
     try {
       await targetMember.kick(reason);
       await interaction.reply({ 
-        content: `💨 **${targetUser.tag}** foi expulso do servidor!\n**Moderador:** ${interaction.user.tag}\n**Motivo:** ${reason}` 
+        content: `💨 **${targetUser.tag}** foi expulso(a) do servidor!\n**Moderador:** ${interaction.user.tag}\n**Motivo:** ${reason}` 
       });
     } catch (error) {
       console.error('Erro ao expulsar membro:', error);

@@ -4,10 +4,10 @@ require('dotenv').config();
 const commands = [
   new SlashCommandBuilder()
     .setName('rank')
-    .setDescription('Mostra o teu Cartão de Viajante e Rank de Aventura (AR).')
+    .setDescription('Mostra o seu Cartão de Viajante e Rank de Aventura (AR).')
     .addUserOption(option => 
       option.setName('user')
-        .setDescription('O aventureiro de quem queres ver o rank')
+        .setDescription('O aventureiro de quem você quer ver o rank')
         .setRequired(false)),
 
   new SlashCommandBuilder()
@@ -16,22 +16,22 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName('wish')
-    .setDescription('Faz um Wish/Oração com as tuas Destinos Entrelaçados imaginárias!'),
+    .setDescription('Faça um Wish/Oração com os seus Destinos Entrelaçados imaginários!'),
 
   new SlashCommandBuilder()
     .setName('food')
-    .setDescription('Pergunta à Paimon sobre a comida de emergência.'),
+    .setDescription('Pergunte para a Paimon sobre a comida de emergência.'),
 
   new SlashCommandBuilder()
     .setName('paimon')
-    .setDescription('Pede um conselho ou ouve uma frase sábia da Paimon!'),
+    .setDescription('Peça um conselho ou ouça uma frase sábia da Paimon!'),
 
   new SlashCommandBuilder()
     .setName('clear')
-    .setDescription('Apaga um número específico de mensagens neste canal com uma rajada Anemo.')
+    .setDescription('Apaga uma quantidade específica de mensagens neste canal com uma rajada Anemo.')
     .addIntegerOption(option => 
       option.setName('amount')
-        .setDescription('Número de mensagens a apagar (1-100)')
+        .setDescription('Quantidade de mensagens a apagar (1-100)')
         .setRequired(true)),
 
   new SlashCommandBuilder()
@@ -39,7 +39,7 @@ const commands = [
     .setDescription('Expulsa um membro do servidor.')
     .addUserOption(option =>
       option.setName('target')
-        .setDescription('O membro a expulsar')
+        .setDescription('O membro a ser expulso')
         .setRequired(true))
     .addStringOption(option =>
       option.setName('reason')
@@ -51,7 +51,7 @@ const commands = [
     .setDescription('Bane um membro do servidor.')
     .addUserOption(option =>
       option.setName('target')
-        .setDescription('O membro a banir')
+        .setDescription('O membro a ser banido')
         .setRequired(true))
     .addStringOption(option =>
       option.setName('reason')
@@ -68,16 +68,16 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
 (async () => {
   try {
-    console.log(`👑 A iniciar o registo de ${commands.length} comandos slash (/) do PaimonBot.`);
+    console.log(`👑 Iniciando o registro de ${commands.length} comandos slash (/) do PaimonBot.`);
 
-    // Registar comandos globalmente
+    // Registrar comandos globalmente
     const data = await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
       { body: commands },
     );
 
-    console.log(`✨ Sucesso! Foram registados ${data.length} comandos slash (/) do PaimonBot.`);
+    console.log(`✨ Sucesso! Foram registrados ${data.length} comandos slash (/) do PaimonBot.`);
   } catch (error) {
-    console.error('Erro ao registar comandos no Discord:', error);
+    console.error('Erro ao registrar comandos no Discord:', error);
   }
 })();

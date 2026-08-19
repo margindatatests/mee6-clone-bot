@@ -17,7 +17,7 @@ http.createServer((req, res) => {
 // Inicializar a base de dados local
 database.init();
 
-// Inicializar cliente Discord com intents necessários
+// Inicializar cliente Discord com os intents necessários
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -66,13 +66,13 @@ for (const file of eventFiles) {
   }
 }
 
-// Evento Ready com status e atividade temática da Paimon
+// Evento Ready com status e atividade temática da Paimon em PT-BR
 client.once('ready', () => {
-  console.log(`✨ Paimon acordou! Sessão iniciada como ${client.user.tag}`);
+  console.log(`✨ A Paimon acordou! Sessão iniciada como ${client.user.tag}`);
   
   if (client.user) {
     client.user.setPresence({
-      activities: [{ name: 'a comer comida de emergência 🍰 | /paimon', type: ActivityType.Playing }],
+      activities: [{ name: 'comendo comida de emergência 🍰 | /paimon', type: ActivityType.Playing }],
       status: 'online'
     });
   }
@@ -80,7 +80,7 @@ client.once('ready', () => {
 
 // Iniciar sessão no Discord
 if (!process.env.DISCORD_TOKEN) {
-  console.error('ERRO: A variável DISCORD_TOKEN não está definida no ficheiro .env!');
+  console.error('ERRO: A variável DISCORD_TOKEN não está definida no arquivo .env!');
   process.exit(1);
 }
 

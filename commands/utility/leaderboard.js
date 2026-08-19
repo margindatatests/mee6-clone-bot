@@ -13,7 +13,7 @@ module.exports = {
 
     if (topUsers.length === 0) {
       return interaction.reply({ 
-        content: '📜 O Mural de Aventureiros ainda está vazio! Comecem a conversar no chat para ganhar EXP e subir no Rank de Aventura!', 
+        content: '📜 O Mural de Aventureiros ainda está vazio! Comece a conversar no chat para ganhar EXP e subir no Rank de Aventura!', 
         ephemeral: true 
       });
     }
@@ -23,7 +23,7 @@ module.exports = {
       .setDescription('Aqui estão os Viajantes com maior **Rank de Aventura (AR)** e dedicação no servidor!\n')
       .setColor(config.embedColor || '#F3C343')
       .setThumbnail(interaction.guild.iconURL({ dynamic: true }))
-      .setFooter({ text: 'PaimonBot • Continua a explorar para alcançares o topo!' })
+      .setFooter({ text: 'PaimonBot • Continue explorando para alcançar o topo!' })
       .setTimestamp();
 
     let description = '';

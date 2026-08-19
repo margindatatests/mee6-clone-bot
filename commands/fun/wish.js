@@ -35,40 +35,35 @@ const THREE_STAR_WEAPONS = [
 module.exports = {
   data: {
     name: 'wish',
-    description: 'Faz um Wish/Oração com as tuas Destinos Entrelaçados imaginárias!'
+    description: 'Faça um Wish/Oração com os seus Destinos Entrelaçados imaginários!'
   },
   async execute(interaction) {
     const roll = Math.random() * 100;
     let result = {};
-    let stars = 3;
     let embedColor = '#5865F2';
-    let bannerTitle = '💫 Oração de Teyvat';
 
     if (roll < 3.5) {
       // 5-Star Drop (Ouro)
-      stars = 5;
       const char = FIVE_STAR_POOL[Math.floor(Math.random() * FIVE_STAR_POOL.length)];
       result = {
         title: `🌟🌟🌟🌟🌟 OURO LENDÁRIO! (${char.name})`,
-        description: `✨ **BRILHO DOURADO NO CÉU!** ✨\n\nObtiveste **${char.name}** [${char.element}]!\n*${char.title}*\n\nA Paimon está maravilhada! Que sorte inacreditável, Viajante! 🎉`
+        description: `✨ **BRILHO DOURADO NO CÉU!** ✨\n\nVocê conseguiu **${char.name}** [${char.element}]!\n*${char.title}*\n\nA Paimon está maravilhada! Que sorte inacreditável, Viajante! 🎉`
       };
       embedColor = '#FFD700';
     } else if (roll < 20) {
       // 4-Star Drop (Roxo)
-      stars = 4;
       const char = FOUR_STAR_POOL[Math.floor(Math.random() * FOUR_STAR_POOL.length)];
       result = {
         title: `💜💜💜💜 Item de 4 Estrelas! (${char.name})`,
-        description: `Brilho Roxo! Obtiveste **${char.name}** [${char.element}]!\n*${char.title}*\n\nA Paimon acha uma excelente adição à tua equipa!`
+        description: `Brilho Roxo! Você conseguiu **${char.name}** [${char.element}]!\n*${char.title}*\n\nA Paimon acha uma excelente adição para a sua equipe!`
       };
       embedColor = '#A335EE';
     } else {
       // 3-Star Drop (Azul)
-      stars = 3;
       const weapon = THREE_STAR_WEAPONS[Math.floor(Math.random() * THREE_STAR_WEAPONS.length)];
       result = {
         title: `💙 Item de 3 Estrelas (Arma)`,
-        description: `Saiu-te uma **${weapon}** (3⭐).\n\n*A Paimon suspira:* "Mais uma arma de 3 estrelas para a coleção... Tenta de novo na próxima!"`
+        description: `Saiu uma **${weapon}** (3⭐).\n\n*A Paimon suspira:* "Mais uma arma de 3 estrelas para a coleção... Tente de novo na próxima!"`
       };
       embedColor = '#0070DD';
     }

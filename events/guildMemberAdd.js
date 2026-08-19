@@ -17,17 +17,17 @@ module.exports = {
     
     if (!channel) return;
 
-    // Criar embed de boas-vindas da Paimon
+    // Criar embed de boas-vindas da Paimon em PT-BR
     const welcomeEmbed = new EmbedBuilder()
       .setTitle('✨ Um novo Viajante chegou a Teyvat!')
-      .setDescription(`Olá ${member}! A **Paimon** dá-te as boas-vindas ao servidor **${guild.name}**!\n\nPrepara as tuas armas, explora os canais e diverte-te connosco nesta grande aventura!\n*(E lembra-te: a Paimon não é comida de emergência! 🍰)*`)
+      .setDescription(`Olá ${member}! A **Paimon** te dá as boas-vindas ao servidor **${guild.name}**!\n\nPrepare suas armas, explore os canais e divirta-se com a gente nessa grande aventura!\n*(E lembre-se: a Paimon não é comida de emergência! 🍰)*`)
       .setThumbnail(member.user.displayAvatarURL({ dynamic: true, size: 256 }))
       .setColor(config.embedColor || '#F3C343')
       .setFooter({ text: `Agora somos ${guild.memberCount} aventureiros no servidor!` })
       .setTimestamp();
 
     try {
-      await channel.send({ content: `Bem-vindo ${member}! 🎉`, embeds: [welcomeEmbed] });
+      await channel.send({ content: `Bem-vindo(a) ${member}! 🎉`, embeds: [welcomeEmbed] });
     } catch (error) {
       console.error(`Erro ao enviar mensagem de boas-vindas da Paimon:`, error);
     }

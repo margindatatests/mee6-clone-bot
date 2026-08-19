@@ -3,13 +3,13 @@ const { PermissionFlagsBits } = require('discord.js');
 module.exports = {
   data: {
     name: 'clear',
-    description: 'Apaga um número específico de mensagens neste canal com uma rajada de vento Anemo.'
+    description: 'Apaga uma quantidade específica de mensagens neste canal com uma rajada Anemo.'
   },
   async execute(interaction) {
     // Verificar permissões
     if (!interaction.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
       return interaction.reply({ 
-        content: '🚫 Não tens permissão de Gerir Mensagens neste canal!', 
+        content: '🚫 Você não tem permissão para Gerenciar Mensagens neste canal!', 
         ephemeral: true 
       });
     }
@@ -24,7 +24,7 @@ module.exports = {
     const amount = interaction.options.getInteger('amount');
 
     if (amount < 1 || amount > 100) {
-      return interaction.reply({ content: 'Por favor, introduz um valor entre 1 e 100 mensagens.', ephemeral: true });
+      return interaction.reply({ content: 'Por favor, insira um valor entre 1 e 100 mensagens.', ephemeral: true });
     }
 
     await interaction.deferReply({ ephemeral: true });

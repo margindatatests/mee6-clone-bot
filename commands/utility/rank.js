@@ -5,7 +5,7 @@ const config = require('../../config.json');
 module.exports = {
   data: {
     name: 'rank',
-    description: 'Mostra o teu Cartão de Viajante e Rank de Aventura (AR).'
+    description: 'Mostra o seu Cartão de Viajante e Rank de Aventura (AR).'
   },
   async execute(interaction) {
     const targetUser = interaction.options.getUser('user') || interaction.user;
@@ -22,7 +22,7 @@ module.exports = {
     const user = database.getUser(guildId, targetUser.id);
     const xpNeeded = database.getXpNeededForNextLevel(user.level);
 
-    // Calcular percentagem e barra de progresso temática
+    // Calcular porcentagem e barra de progresso temática
     const percent = Math.min(Math.floor((user.xp / xpNeeded) * 100), 100);
     const filledBlocks = Math.min(Math.floor(percent / 10), 10);
     const emptyBlocks = 10 - filledBlocks;
